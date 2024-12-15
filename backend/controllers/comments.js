@@ -84,4 +84,29 @@ const deleteComment = async (req, res, next) => {
   }
 };
 
-module.exports = { allComments, createComment, deleteComment };
+//* Archive Comment for Article
+const archiveComment = async (req, res, next) => {
+  try {
+    const { loggedUser } = req;
+    if (!loggedUser) throw new UnauthorizedError();
+
+    const { slug, commentId } = req.params;
+
+    const comment = await Comment.findByPk(commentId);
+    if (!comment) throw new NotFoundError("Comment");
+
+    if (loggedUser.id !== comment.userId) {
+      throw new ForbiddenError("comment");
+    }
+
+    // Update comment to be archived
+    comment.isArchived = true; 
+    await comment.save();
+
+    res.json({ message: { body: ["Comment archived successfully"] } });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { allComments, createComment, deleteComment, archiveComment };
